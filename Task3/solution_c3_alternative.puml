@@ -1,0 +1,30 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title [C3] Cloud Platform — Детализация (Альтернативное решение)
+
+' Внешние системы
+System_Ext(hardware, "Оборудование ферм", "Камеры (RTSP)")
+ContainerDb(cloud_db, "Cloud Database", "PostgreSQL", "Мастер-данные")
+
+Container_Boundary(video_processor, "Video Processor (Go)") {
+    Component(stream_handler, "Stream Handler", "FFmpeg/Go", "Прием 150+ RTSP потоков")
+    Component(frame_ext, "Frame Extractor", "Go", "Нарезка кадров для AI")
+
+    Rel(stream_handler, frame_ext, "Поток", "Internal")
+}
+
+Container_Boundary(monitoring_service, "Monitoring Service (Go)") {
+    Component(tenant_mgr, "Farm Manager", "Go", "Управление списком ферм и загонов")
+    Component(logic_eng, "Business Logic Engine", "Go", "Анализ событий со всех ферм")
+    Component(notif_proxy, "Notification Proxy", "Go", "Очередь на отправку пушей")
+    Component(db_client, "DB Client", "SQL", "Доступ к центральной БД")
+
+    Rel(logic_eng, db_client, "Запрос настроек", "Internal")
+    Rel(logic_eng, notif_proxy, "Событие для пуша", "Internal")
+}
+
+Rel(hardware, stream_handler, "Видео", "RTSP")
+Rel(db_client, cloud_db, "SQL", "TCP")
+
+@enduml

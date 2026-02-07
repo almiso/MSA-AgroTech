@@ -1,0 +1,26 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title [C4] Stream Handler — Структура кода (Go / Cloud)
+
+' Внутренняя структура компонента
+Component(conn_manager, "Connection Manager", "Struct", "Управляет пулом RTSP-соединений со всеми фермами")
+
+Container_Boundary(processing_pipeline, "Processing Pipeline") {
+    Component(rtsp_client, "RTSP Client Library", "Package", "Низкоуровневая работа с протоколом (FFmpeg/GStreamer wrapper)")
+    Component(packet_decoder, "Packet Decoder", "Logic", "Декодирование видео-пакетов в сырые кадры (Raw Frames)")
+    Component(frame_buffer, "Frame Buffer", "Interface/Queue", "Очередь кадров для балансировки нагрузки")
+}
+
+Component(health_checker, "Link Health Checker", "Logic", "Мониторинг задержек (jitter) и потерь пакетов в интернет-канале")
+
+Component(output_emitter, "Frame Emitter", "Interface", "Интерфейс для передачи кадров в Frame Extractor")
+
+' Связи в коде
+Rel(conn_manager, rtsp_client, "Инициализирует сессии", "Go Context")
+Rel(rtsp_client, packet_decoder, "Передает байты", "Data Stream")
+Rel(packet_decoder, frame_buffer, "Складывает кадры", "In-memory")
+Rel(health_checker, conn_manager, "Сигнал о разрыве связи", "Callback")
+Rel(frame_buffer, output_emitter, "Забирает готовый кадр", "Internal")
+
+@enduml

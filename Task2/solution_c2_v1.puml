@@ -1,0 +1,58 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title [C2] PigMonitoring — Целевое решение (Edge-аналитика)
+
+Person(operator, "Оператор", "Удаленный мониторинг и настройка")
+Person(worker, "Дежурный сотрудник", "Локальное реагирование на ферме")
+
+' Глобальная граница системы
+System_Boundary(pig_monitoring, "PigMonitoring System") {
+
+    ' ГРАНИЦА ФЕРМЫ (их 150+)
+    System_Boundary(farm_edge, "Edge Agent (на каждой ферме)") {
+        Container(video_processor, "Video Processor", "Go", "Захват RTSP-потока, нарезка кадров")
+        Container(ai_inference, "AI Inference Service", "Python", "Обертка над нейросетью партнера (анализ кадров)")
+        Container(edge_controller, "Edge Controller", "Go", "Ядро фермы: логика драк, управление кормушками")
+        Container(sync_service, "Sync Service", "Go", "Синхронизация данных с облаком при наличии сети")
+        ContainerDb(local_db, "Local Database", "SQLite/PostgreSQL", "Хранение событий и настроек локально")
+        Container(message_broker, "Local Broker", "RabbitMQ", "Очередь для команд и телеметрии датчиков")
+    }
+
+    ' ГРАНИЦА ОБЛАКА
+    System_Boundary(cloud_core, "Central Cloud Platform") {
+        Container(cloud_api, "Cloud API Gateway", "Go", "Прием данных от агентов и запросов от приложений")
+        Container(config_service, "Config & Management", "Go", "Управление парком агентов и настройками")
+        Container(notif_service, "Notification Service", "Go", "Рассылка Push-уведомлений (когда есть интернет)")
+        ContainerDb(central_db, "Central Database", "PostgreSQL", "Мастер-данные, пользователи, глобальные логи")
+    }
+}
+
+' Внешние системы
+System_Ext(hardware, "Оборудование ферм", "Камеры, кормушки, датчики (Modbus/MQTT)")
+System_Ext(erp, "ERP (1С:Агро)", "Данные о животных и складах")
+System_Ext(kafka, "Corporate Kafka", "Шина данных АгроТех Х (для BI)")
+
+' ВЗАИМОДЕЙСТВИЯ НА ФЕРМЕ
+Rel(hardware, video_processor, "Видеопоток", "RTSP")
+Rel(video_processor, ai_inference, "Кадры на анализ", "gRPC")
+Rel(ai_inference, edge_controller, "Результат (событие)", "gRPC")
+Rel(edge_controller, local_db, "Запись события", "SQL")
+Rel(edge_controller, message_broker, "Команды кормушкам / Телеметрия", "MQTT")
+Rel(message_broker, hardware, "Управление", "Modbus/MQTT")
+Rel(edge_controller, worker, "Срочный алерт (локально)", "WebSockets / Local Wi-Fi")
+
+' СИНХРОНИЗАЦИЯ С ОБЛАКОМ
+Rel(sync_service, local_db, "Читает очередь на отправку", "SQL")
+Rel(sync_service, cloud_api, "Пакетная передача данных", "HTTPS/gRPC")
+
+' ВЗАИМОДЕЙСТВИЯ В ОБЛАКЕ И ВНЕ
+Rel(cloud_api, config_service, "Передает данные", "Internal")
+Rel(config_service, central_db, "Хранит данные", "SQL")
+Rel(config_service, erp, "Сверяет поголовье", "REST API")
+Rel(config_service, kafka, "Сбрасывает метрики", "Kafka Protocol")
+Rel(operator, cloud_api, "Настраивает систему", "HTTPS")
+Rel(cloud_api, notif_service, "Запрос на Push", "Internal")
+Rel(notif_service, worker, "Push-уведомление", "Firebase/APNS")
+
+@enduml

@@ -10,8 +10,8 @@ Person(worker, "Дежурный сотрудник", "Получает экст
 System(pig_system, "PigMonitoring System", "Обеспечивает видеоаналитику, контроль кормления и оповещения")
 
 System_Ext(erp, "ERP (1С:Агро)", "Учет поголовья и кормов")
-System_Ext(kafka, "Шина данных (Kafka)", "Прием метрик для общекорпоративной аналитики")
-System_Ext(ai_model, "Partner AI Service", "Предоставляет готовую модель нейросети")
+System_Ext(kafka, "Corporate Kafka", "Шина данных для общекорпоративной аналитики")
+System_Ext(ai_model, "Partner AI API", "Внешний сервис распознавания образов")
 System_Ext(hardware, "Оборудование ферм", "Камеры, кормушки, датчики воды разных производителей")
 
 Rel(operator, pig_system, "Настраивает и мониторит", "Web/Mobile API")

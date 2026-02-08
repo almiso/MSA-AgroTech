@@ -15,7 +15,7 @@ System_Ext(ai_model, "Partner AI API", "Внешний сервис распоз
 System_Ext(hardware, "Оборудование ферм", "Камеры, кормушки, датчики воды разных производителей")
 
 Rel(operator, pig_system, "Настраивает и мониторит", "Web/Mobile API")
-Rel(worker, pig_system, "Получает алерты (в т.ч. локально)", "WebSockets/Local UI")
+Rel(worker, pig_system, "Получает алерты (в т.ч. локально)", "WebSockets/Local WiFi")
 
 Rel(pig_system, hardware, "Собирает данные и управляет", "MQTT/Modbus/ONVIF")
 Rel(pig_system, ai_model, "Загружает модель/обновления", "HTTPS")

@@ -37,7 +37,7 @@ Rel(video_service, monitoring_service, "Событие: Драка обнару�
 
 ' Внешние интеграции
 Rel(monitoring_service, erp, "Запрос данных о животных", "REST API")
-Rel(monitoring_service, kafka, "Публикация метрик", "Kafka Protocol")
+Rel(monitoring_service, kafka, "Передает метрики", "Kafka Protocol")
 Rel(notification_service, worker, "Шлет Push-уведомление", "Firebase/APNS")
 
 ' Пользователи

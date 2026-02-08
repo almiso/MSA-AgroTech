@@ -21,6 +21,6 @@ Rel(hardware, pig_system, "Стриминг видео и телеметрии",
 Rel(pig_system, ai_model, "Запросы на распознавание образов", "REST/gRPC")
 
 Rel(pig_system, erp, "Синхронизация данных", "REST API")
-Rel(pig_system, kafka, "Передает метрик", "Kafka Protocol")
+Rel(pig_system, kafka, "Передает метрики", "Kafka Protocol")
 
 @enduml

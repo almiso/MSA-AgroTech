@@ -1,7 +1,7 @@
 @startuml
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
 
-title [C3] Cloud Platform — Детализация (Альтернативное решение)
+title [Cс] Cloud Platform — Альтернативное решение (Cloud-аналитика)
 
 ' Внешние системы
 System_Ext(hardware, "Оборудование ферм", "Камеры (RTSP)")
@@ -24,7 +24,8 @@ Container_Boundary(monitoring_service, "Monitoring Service (Go)") {
     Rel(logic_eng, notif_proxy, "Событие для пуша", "Internal")
 }
 
-Rel(hardware, stream_handler, "Видео", "RTSP")
+Rel(hardware, stream_handler, "Передача видеопотока", "RTSP")
 Rel(db_client, cloud_db, "SQL", "TCP")
+Rel(frame_ext, logic_eng, "Событие детекции", "Internal Bus / gRPC")
 
 @enduml

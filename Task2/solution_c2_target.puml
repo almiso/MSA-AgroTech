@@ -15,7 +15,7 @@ System_Boundary(pig_monitoring, "PigMonitoring System") {
         Container(ai_inference, "AI Inference Service", "Python", "Обертка над нейросетью партнера (анализ кадров)")
         Container(edge_controller, "Edge Controller", "Go", "Ядро фермы: логика драк, управление кормушками")
         Container(sync_service, "Sync Service", "Go", "Синхронизация данных с облаком при наличии сети")
-        ContainerDb(local_db, "Local Database", "SQLite/PostgreSQL", "Хранение событий и настроек локально")
+        ContainerDb(local_db, "Local Database", "PostgreSQL", "Хранение событий и настроек локально")
         Container(message_broker, "Local Broker", "RabbitMQ", "Очередь для команд и телеметрии датчиков")
     }
 
@@ -29,7 +29,7 @@ System_Boundary(pig_monitoring, "PigMonitoring System") {
 }
 
 ' Внешние системы
-System_Ext(hardware, "Оборудование ферм", "Камеры, кормушки, датчики (Modbus/MQTT)")
+System_Ext(hardware, "Оборудование ферм", "Камеры, кормушки, датчики (ONVIF/MQTT/Modbus)")
 System_Ext(erp, "ERP (1С:Агро)", "Данные о животных и складах")
 System_Ext(kafka, "Corporate Kafka", "Шина данных АгроТех Х (для BI)")
 

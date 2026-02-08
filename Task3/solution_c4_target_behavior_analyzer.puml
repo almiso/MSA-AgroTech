@@ -1,0 +1,27 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title [C4] Behavior Analyzer — Структура кода (Go)
+
+' Описание внутренних структур и интерфейсов
+Component(metadata_receiver, "Metadata Receiver", "Interface/gRPC", "Принимает пакеты данных (координаты свиней, ID загона)")
+
+Container_Boundary(logic_engine, "Behavior Logic Engine") {
+    Component(history_cache, "History Cache", "In-memory Map", "Хранит позиции свиней за последние 10-20 секунд")
+    Component(collision_detector, "Collision Detector", "Logic", "Вычисляет пересечение и близость объектов")
+    Component(duration_validator, "Duration Validator", "Logic", "Проверяет, длится ли контакт дольше порога (например, 3 сек)")
+}
+
+Component(config_store, "Threshold Config", "Struct", "Хранит настройки: мин. дистанция, время задержки алертов")
+
+Component(event_emitter, "Event Emitter", "Interface", "Интерфейс для передачи сигнала в Alert Manager и Data Mapper")
+
+' Взаимодействия внутри кода
+Rel(metadata_receiver, history_cache, "Обновляет позиции", "Go Channels")
+Rel(history_cache, collision_detector, "Запрос текущих векторов", "Internal Call")
+Rel(collision_detector, duration_validator, "Сигнал о контакте", "Internal Call")
+Rel(config_store, collision_detector, "Дает параметры дистанции", "Inject")
+Rel(config_store, duration_validator, "Дает лимиты по времени", "Inject")
+Rel(duration_validator, event_emitter, "Драка подтверждена", "Callback / Event")
+
+@enduml

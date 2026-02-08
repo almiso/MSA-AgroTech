@@ -1,0 +1,47 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+
+title [C2] PigMonitoring — Альтернативное решение (Cloud-аналитика)
+
+Person(operator, "Оператор", "Мониторинг через веб-интерфейс")
+Person(worker, "Дежурный сотрудник", "Получает уведомления на смартфон")
+
+System_Boundary(pig_monitoring_cloud, "PigMonitoring Cloud Platform") {
+    Container(api_gateway, "Cloud API Gateway", "Nginx / Kong", "Единая точка входа")
+    Container(notification_service, "Notification Service", "Go", "Логика отправки уведомлений")
+    Container(video_service, "Video Processor", "Go", "Принимает видеопотоки, нарезает кадры для AI")
+    Container(monitoring_service, "Monitoring Service", "Go", "Ядро системы: бизнес-логика, управление кормушками, анализ телеметрии")
+    Container(ai_wrapper, "AI Integration Service", "Python", "Прокси-сервис для взаимодействия с API нейросети партнера")
+    ContainerDb(database, "Cloud Database", "PostgreSQL", "Хранение настроек, истории событий и метаданных")
+    Container(web_app, "Admin Web Portal", "React", "Интерфейс для настройки системы и просмотра отчетов")
+}
+
+' Внешние системы
+System_Ext(hardware, "Оборудование ферм", "Камеры (RTSP), кормушки и датчики (MQTT)")
+System_Ext(partner_ai, "Partner AI API", "Внешний облачный сервис распознавания образов")
+System_Ext(kafka, "Corporate Kafka", "Шина данных АгроТех Х")
+System_Ext(erp, "ERP (1С:Агро)", "Мастер-данные о животных")
+
+' Связи оборудования с облаком (через интернет)
+Rel(hardware, api_gateway, "Стриминг видео и телеметрии", "RTSP / MQTT over TLS")
+Rel(api_gateway, video_service, "Передает видеопоток", "gRPC")
+Rel(api_gateway, monitoring_service, "Передает данные датчиков", "gRPC")
+
+' Внутренние связи в облаке
+Rel(video_service, ai_wrapper, "Запрос на анализ кадра", "gRPC")
+Rel(ai_wrapper, partner_ai, "Вызов нейросети", "HTTPS / REST")
+Rel(monitoring_service, database, "Чтение/Запись", "SQL")
+Rel(monitoring_service, notification_service, "Команда на уведомление", "Internal")
+Rel(video_service, monitoring_service, "Событие: Драка обнаружена", "Internal Bus")
+
+' Внешние интеграции
+Rel(monitoring_service, erp, "Запрос данных о животных", "REST API")
+Rel(monitoring_service, kafka, "Передает метрики", "Kafka Protocol")
+Rel(notification_service, worker, "Шлет Push-уведомление", "Firebase/APNS")
+
+' Пользователи
+Rel(operator, web_app, "Использует", "HTTPS")
+Rel(web_app, api_gateway, "Запросы к API", "HTTPS / JSON")
+
+@enduml

@@ -1,0 +1,51 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title [C3] Edge Agent — Целевое решение (Edge-аналитика)
+
+
+' Внешние контейнеры для контекста
+Container(video_proc, "Video Processor", "Go", "Захват и нарезка видео")
+ContainerDb(local_db, "Local Database", "PostgreSQL", "Хранение событий и телеметрии")
+Container(cloud_api, "Cloud API Gateway", "Go", "Облачный бэкенд")
+
+' 1. Внутренности AI Inference Service
+Container_Boundary(ai_service, "AI Inference Service (Python)") {
+    Component(grpc_api, "gRPC API", "FastAPI/gRPC", "Прием кадров на анализ")
+    Component(preproc, "Preprocessing Engine", "OpenCV", "Подготовка кадра (resize, crop)")
+    Component(model_wrapper, "Model Wrapper", "PyTorch/ONNX", "Инференс нейросети партнера")
+
+    Rel(grpc_api, preproc, "Передает кадр", "Internal")
+    Rel(preproc, model_wrapper, "Очищенный кадр", "Internal")
+}
+
+' 2. Внутренности Edge Controller
+Container_Boundary(edge_controller, "Edge Controller (Go)") {
+    Component(analyzer, "Behavior Analyzer", "Go", "Детекция драк по метаданным")
+    Component(alert_mgr, "Alert Manager", "WebSockets", "Мгновенные локальные алерты")
+    Component(iot_adapter, "IoT Adapter", "Go", "Связь с кормушками (Modbus/MQTT)")
+    Component(health, "Health Monitor", "Go", "Пинг камер и датчиков")
+    Component(data_mapper, "Data Mapper", "GORM/SQL", "Слой записи в БД (Repository)")
+
+    Rel(analyzer, alert_mgr, "Сигнал о драке", "Internal")
+    Rel(analyzer, data_mapper, "Сохранение инцидента", "Internal")
+    Rel(health, alert_mgr, "Ошибка оборудования", "Internal")
+    Rel(iot_adapter, data_mapper, "Логи телеметрии", "Internal")
+}
+
+' 3. Внутренности Sync Service
+Container_Boundary(sync_service, "Sync Service (Go)") {
+    Component(poller, "Outbox Poller", "Go", "Чтение БД по таймеру")
+    Component(uploader, "Batch Uploader", "gRPC Client", "Попытка отправки в облако")
+
+    Rel(poller, uploader, "Данные для отправки", "Internal")
+}
+
+' Внешние связи между контейнерами
+Rel(video_proc, grpc_api, "Кадры", "gRPC")
+Rel(model_wrapper, analyzer, "Метаданные (координаты)", "gRPC")
+Rel(data_mapper, local_db, "Чтение/Запись", "SQL")
+Rel(poller, local_db, "Выборка неотправленного", "SQL")
+Rel(uploader, cloud_api, "Пакетная передача", "HTTPS/gRPC")
+
+@enduml
